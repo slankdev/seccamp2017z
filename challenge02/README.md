@@ -7,7 +7,7 @@
 ヒントとしてキーワードを用意したのでそれを参考にGoogleで検索したり,
 チューターや講師に頼ってください.
 
-```
+```c:main.c
 #include <stdio.h>
 #include <stdint.h>
 #include <arpa/inet.h>
