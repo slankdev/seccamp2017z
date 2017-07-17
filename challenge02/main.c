@@ -1,8 +1,8 @@
 
 #include <stdio.h>
-#include "proto_header.h"
+#include <stdint.h>
+#include <arpa/inet.h>
 
-/* Frame (66 bytes) */
 static const unsigned char pkt131[66] = {
 	0x00, 0xe0, 0x4d, 0x10, 0x15, 0x0c, 0x00, 0x23,
 	0xdf, 0xff, 0xa8, 0xa7, 0x08, 0x00, 0x45, 0x00,
@@ -15,8 +15,24 @@ static const unsigned char pkt131[66] = {
 	0x40, 0x35
 };
 
-struct Ether
+struct eth_hdr {
+	uint8_t  dst[6];
+	uint8_t  src[6];
+	uint16_t type;
+};
 
-int main()
-{
-}
+struct ip4_hdr {
+	uint8_t  ihl:4;
+	uint8_t  ver:4;
+	uint8_t  tos;
+	uint16_t totlen;
+	uint16_t id;
+	uint16_t flag_off;
+	uint8_t  ttl;
+	uint8_t  proto;
+	uint16_t checksum;
+	uint8_t  src[4];
+	uint8_t  dst[4];
+};
+
+int main() {}
