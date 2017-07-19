@@ -24,15 +24,26 @@ static const unsigned char pkt131[66] = {
 	0x40, 0x35
 };
 
+enum eth_type {
+	eth_ipv4 = 0x0800,
+	eth_arp  = 0x0806,
+	eth_ipv6 = 0x86dd,
+};
+
 struct eth_hdr {
 	uint8_t  dst[6];
 	uint8_t  src[6];
 	uint16_t type;
+} __attribute__((__packed__));
+
+enum ip_proto {
+	ipproto_icmp = 1,
+	ipproto_tcp  = 6,
+	ipproto_udp  = 17,
 };
 
 struct ip4_hdr {
-	uint8_t  ihl:4;
-	uint8_t  ver:4;
+	uint8_t  version_ihl;
 	uint8_t  tos;
 	uint16_t totlen;
 	uint16_t id;
@@ -42,7 +53,7 @@ struct ip4_hdr {
 	uint16_t checksum;
 	uint8_t  src[4];
 	uint8_t  dst[4];
-};
+} __attribute__((__packed__));
 
 int main() {}
 ```
