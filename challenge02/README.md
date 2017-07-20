@@ -55,7 +55,10 @@ struct ip4_hdr {
 	uint8_t  dst[4];
 } __attribute__((__packed__));
 
-int main() {}
+int main()
+{
+	return 0;
+}
 ```
 
 
