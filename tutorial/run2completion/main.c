@@ -47,9 +47,6 @@
 #define MBUF_CACHE_SIZE 250
 #define BURST_SIZE 32
 
-struct rte_ring* rx[2];
-struct rte_ring* tx[2];
-
 static const struct rte_eth_conf port_conf_default = {
 	.rxmode = { .max_rx_pkt_len = ETHER_MAX_LEN }
 };
@@ -104,7 +101,7 @@ static inline int port_init(uint8_t port, struct rte_mempool *mbuf_pool)
 	return 0;
 }
 
-static __attribute__((noreturn)) int thread_rx(__attribute__((unused)) void* arg)
+static __attribute__((noreturn)) int thread(__attribute__((unused)) void* arg)
 {
 	const uint8_t nb_ports = rte_eth_dev_count();
 	while (1) {
@@ -112,27 +109,6 @@ static __attribute__((noreturn)) int thread_rx(__attribute__((unused)) void* arg
 		for (uint8_t port = 0; port < nb_ports; port++) {
 			struct rte_mbuf *bufs[BURST_SIZE];
 			const uint16_t nb_rx = rte_eth_rx_burst(port, 0, bufs, BURST_SIZE);
-			if (unlikely(nb_rx == 0)) continue;
-
-			const uint16_t nb_tx = rte_ring_enqueue_burst(rx[port^1], (void*)bufs, nb_rx, NULL);
-			if (unlikely(nb_tx < nb_rx)) {
-				uint16_t buf;
-				for (buf = nb_tx; buf < nb_rx; buf++)
-					rte_pktmbuf_free(bufs[buf]);
-			}
-		}
-
-	}// while
-}
-
-static __attribute__((noreturn)) int thread_tx(__attribute__((unused)) void* arg)
-{
-	const uint8_t nb_ports = rte_eth_dev_count();
-	while (1) {
-
-		for (uint8_t port = 0; port < nb_ports; port++) {
-			struct rte_mbuf *bufs[BURST_SIZE];
-			const uint16_t nb_rx = rte_ring_dequeue_burst(tx[port], (void**)bufs, BURST_SIZE, NULL);
 			if (unlikely(nb_rx == 0)) continue;
 
 			const uint16_t nb_tx = rte_eth_tx_burst(port ^ 1, 0, bufs, nb_rx);
@@ -143,30 +119,8 @@ static __attribute__((noreturn)) int thread_tx(__attribute__((unused)) void* arg
 			}
 		}
 
-	} // while
+	}// while
 }
-
-static __attribute__((noreturn)) int thread_wk(__attribute__((unused)) void* arg)
-{
-	const uint8_t nb_ports = rte_eth_dev_count();
-	while (1) {
-
-		for (uint8_t port = 0; port < nb_ports; port++) {
-			struct rte_mbuf *bufs[BURST_SIZE];
-			const uint16_t nb_rx = rte_ring_dequeue_burst(rx[port], (void**)bufs, BURST_SIZE, NULL);
-			if (unlikely(nb_rx == 0)) continue;
-
-			const uint16_t nb_tx = rte_ring_enqueue_burst(tx[port^1], (void*)bufs, nb_rx, NULL);
-			if (unlikely(nb_tx < nb_rx)) {
-				uint16_t buf;
-				for (buf = nb_tx; buf < nb_rx; buf++)
-					rte_pktmbuf_free(bufs[buf]);
-			}
-		}
-
-	} // while
-}
-
 
 int main(int argc, char *argv[])
 {
@@ -194,16 +148,7 @@ int main(int argc, char *argv[])
 		if (port_init(portid, mbuf_pool) != 0)
 			rte_exit(EXIT_FAILURE, "Cannot init port %"PRIu8 "\n", portid);
 
-	rx[0] = rte_ring_create("rx[0]", 2048, 0, 0);
-	rx[1] = rte_ring_create("rx[1]", 2048, 0, 0);
-	tx[0] = rte_ring_create("tx[0]", 2048, 0, 0);
-	tx[1] = rte_ring_create("tx[1]", 2048, 0, 0);
-	if (rx[0] == NULL || rx[1] == NULL || tx[0] == NULL || tx[1] == NULL)
-		rte_exit(EXIT_FAILURE, "Cannot create ring");
-
-	rte_eal_remote_launch(thread_rx, NULL, 1);
-	rte_eal_remote_launch(thread_tx, NULL, 2);
-	rte_eal_remote_launch(thread_wk, NULL, 3);
+	rte_eal_remote_launch(thread, NULL, 1);
 	rte_eal_mp_wait_lcore();
 	return 0;
 }
