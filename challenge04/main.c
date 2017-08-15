@@ -133,7 +133,6 @@ static void analyze_packet(struct rte_mbuf* m)
 
 int main(int argc, char **argv)
 {
-	rte_log_set_global_level(RTE_LOG_EMERG);
 	int ret = rte_eal_init(argc, argv);
 	if (ret < 0) rte_panic("Cannot init EAL\n");
 
