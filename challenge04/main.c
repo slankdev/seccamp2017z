@@ -125,7 +125,7 @@ static struct rte_mbuf* get_pkt(void)
 	return m;
 }
 
-static void analyze_http(struct rte_mbuf* m)
+static void analyze_packet(struct rte_mbuf* m)
 {
 	rte_hexdump(stdout, "Packet-Hexdump",
 			rte_pktmbuf_mtod(m, uint8_t*), m->pkt_len);
@@ -138,7 +138,7 @@ int main(int argc, char **argv)
 	if (ret < 0) rte_panic("Cannot init EAL\n");
 
 	struct rte_mbuf* m = get_pkt();
-	analyze_http(m);
+	analyze_packet(m);
 	return 0;
 }
 
